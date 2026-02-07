@@ -1,0 +1,3 @@
+
+Timestamp,DeviceName,DeviceId,FileName,FolderPath,InitiatingProcessFileName,InitiatingProcessId,ActionType
+2026-02-07T16:29:15.872121,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,update.dll,C:\\Users\\user1\\AppData\\Roaming\\Microsoft\\Templates,rundll32.exe,6789,ImageLoaded

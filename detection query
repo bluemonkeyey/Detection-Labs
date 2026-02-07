@@ -1,0 +1,20 @@
+//KQL detection hunting for Loader//
+// Identificar archivos DLL recién creados en rutas sospechosas let RecentDLLCreations = DeviceFileEvents 
+| where ActionType == "FileCreated" // Eventos de creación de archivos 
+| where FileName endswith ".dll" // Solo DLLs 
+| where FolderPath has_any( "\ProgramData\", "\Public\", "\Documents\", "\Pictures\", "\Videos\", "\Music\", "\AppData\", "\Temp\", "\Downloads\" ) // Rutas sospechosas 
+| where Timestamp > ago(10m) // Limitado a los últimos 10 minutos 
+| project Timestamp, DeviceName, FolderPath, FileName, FileSize, InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCommandLine; // Correlacionar DLLs creadas con su uso en memoria let DLLLoadEvents = DeviceImageLoadEvents 
+| where FileName endswith ".dll" // Solo eventos relacionados con DLLs 
+| where FolderPath has_any( "\ProgramData\", "\Public\", "\Documents\", "\Pictures\", "\Videos\", "\Music\", "\AppData\", "\Temp\", "\Downloads\" ) // Rutas sospechosas 
+| where Timestamp > ago(10m) // Limitado a los últimos 10 minutos 
+| project Timestamp, DeviceName, FolderPath, FileName, InitiatingProcessFileName, InitiatingProcessId; // Correlación de DLL creadas recientemente con eventos de carga RecentDLLCreations 
+| join kind=inner (DLLLoadEvents) on $left.DeviceName == $right.DeviceName and $left.FileName == $right.FileName 
+| project Timestamp, DeviceName, FolderPath, FileName, FileSize, InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCommandLine; // Agregar heurística basada en modularidad del proceso iniciador 
+| join kind=inner ( DeviceProcessEvents 
+| where ActionType == "ProcessCreated" // Procesos creados 
+| where Timestamp > ago(10m) // Limitado a los últimos 10 minutos 
+| where FileName has_any ("notepad++.exe", "cmd.exe", "powershell.exe", "rundll32.exe") // Procesos iniciadores sospechosos 
+| project DeviceName, ProcessId, ParentProcessName, ParentProcessId, CommandLine, IntegrityLevel ) on $left.DeviceName == $right.DeviceName and $left.InitiatingProcessId == $right.ProcessId 
+| project Timestamp, DeviceName, FolderPath, FileName, FileSize, InitiatingProcessFileName, CommandLine, IntegrityLevel, ParentProcessName, ParentProcessId; // Resumen de detección summarize TotalEvents = count(), UniqueDLLs = dcount(FileName), SuspiciousProcesses = dcount(InitiatingProcessFileName) by DeviceName, FolderPath 
+| sort by TotalEvents desc;

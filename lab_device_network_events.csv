@@ -1,4 +1,0 @@
-
-Timestamp,DeviceName,DeviceId,ActionType,RemoteIP,RemotePort,RemoteUrl,LocalIP,LocalPort,Protocol,InitiatingProcessFileName,InitiatingProcessId
-2026-02-07T16:29:01.872121,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,HttpConnectionInspected,127.0.0.1,8080,http://127.0.0.1:8080/payload.dll,192.168.1.10,49500,TCP,powershell.exe,4321
-2026-02-07T16:29:02.872121,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,HttpConnectionInspected,127.0.0.1,8080,http://127.0.0.1:8080/license.dat,192.168.1.10,49501,TCP,powershell.exe,4321

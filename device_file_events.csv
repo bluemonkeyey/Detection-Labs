@@ -1,0 +1,8 @@
+
+Timestamp,DeviceName,DeviceId,ActionType,FileName,FolderPath,InitiatingProcessFileName,InitiatingProcessId,SHA256
+2026-01-14T10:00:05Z,DESKTOP-1,device123,FileCreated,hpbprndi.exe,C:\\Users\\victim\\AppData\\Local\\Programs\\HP\\Printer\\Driver,wscript.exe,1001,34b7df7919dbbe031b5d802accb566ce6e91df4155b1858c3c81e4c003f1168c
+2026-01-14T10:00:10Z,DESKTOP-1,device123,FileCreated,hpbprndiLOC.dll,C:\\Users\\victim\\AppData\\Local\\Programs\\HP\\Printer\\Driver,wscript.exe,1001,69908f05b436bd97baae56296bf9b9e734486516f9bb9938c2b8752e152315d4
+2026-01-14T10:00:15Z,DESKTOP-1,device123,FileCreated,jayb.dadk,C:\\Users\\victim\\AppData\\Local\\Programs\\HP\\Printer\\Driver,wscript.exe,1001,befa1695fcee9142738ad34cb0bfb453906a7ed52a73e2d665cf378775433aa8
+2026-01-14T10:00:20Z,DESKTOP-1,device123,FileCreated,kgjlj.sil,C:\\Users\\victim\\AppData\\Local\\Programs\\HP\\Printer\\Driver,wscript.exe,1001,458ca514e058fccc55ee3142687146101e723450ebd66575c990ca55f323c769
+2026-01-14T10:00:25Z,DESKTOP-1,device123,FileCreated,pkrfsu.ldy,C:\\Users\\victim\\AppData\\Local\\Programs\\HP\\Printer\\Driver,wscript.exe,1001,b755e4369f1ac733da8f3e236c746eda94751082a3031e591b6643a596a86acb
+2026-01-14T10:00:08Z,DESKTOP-1,device123,FileCreated,report.docx,C:\\Users\\victim\\Documents,explorer.exe,3001,dummysha1

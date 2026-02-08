@@ -1,0 +1,4 @@
+
+Timestamp,DeviceName,DeviceId,ActionType,FileName,FolderPath,InitiatingProcessFileName,InitiatingProcessId,SHA256
+2026-01-14T10:01:05Z,DESKTOP-1,device123,ImageLoaded,hpbprndiLOC.dll,C:\\Users\\victim\\AppData\\Local\\Programs\\HP\\Printer\\Driver,hpbprndi.exe,2001,69908f05b436bd97baae56296bf9b9e734486516f9bb9938c2b8752e152315d4
+2026-01-14T10:01:10Z,DESKTOP-1,device123,ImageLoaded,kernel32.dll,C:\\Windows\\System32,explorer.exe,3001,benignsha

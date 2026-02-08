@@ -1,0 +1,5 @@
+
+Timestamp,DeviceName,DeviceId,ActionType,ProcessId,FileName,ProcessCommandLine,InitiatingProcessFileName,InitiatingProcessId,ParentProcessName,ParentProcessId,IntegrityLevel
+2026-01-14T10:00:00Z,DESKTOP-1,device123,ProcessCreated,1001,wscript.exe,wscript.exe C:\Users\victim\Downloads\8RWRLT.vbs,cmd.exe,500,cmd.exe,500,Medium
+2026-01-14T10:01:00Z,DESKTOP-1,device123,ProcessCreated,2001,hpbprndi.exe,"""C:\Users\victim\AppData\Local\Programs\HP\Printer\Driver\hpbprndi.exe""",wscript.exe,1001,wscript.exe,1001,Medium
+2026-01-14T10:02:00Z,DESKTOP-1,device123,ProcessCreated,3001,explorer.exe,C:\Windows\explorer.exe,winlogon.exe,400,winlogon.exe,400,Medium

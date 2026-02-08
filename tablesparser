@@ -1,15 +1,12 @@
+// -------- DeviceFileEvents --------
+let DeviceFileEvents_LAB = externaldata(Timestamp: datetime,ActionType: string,DeviceName: string,DeviceId: string,FileName: string,FolderPath: string,FileSize: long,InitiatingProcessFileName: string,InitiatingProcessId: long,InitiatingProcessCommandLine: string)
+[@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_file_events.csv"]
+with (format = "csv", ignoreFirstRecord = true);
 // -------- DeviceImageLoadEvents --------
-let DeviceImageLoadEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,FileName: string,FolderPath: string,InitiatingProcessFileName: string,InitiatingProcessId: long,ActionType: string
-)
+let DeviceImageLoadEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,FileName: string,FolderPath: string,InitiatingProcessFileName: string,InitiatingProcessId: long,ActionType: string)
 [@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_image_load_events.csv"]
-with (format = "csv",ignoreFirstRecord = true);
+with (format = "csv", ignoreFirstRecord = true);
 // -------- DeviceProcessEvents --------
-let DeviceProcessEvents_LAB = externaldata( Timestamp: datetime, DeviceName: string, DeviceId: string, ActionType: string, FileName: string, ProcessId: long, ProcessCommandLine: string, ParentProcessName: string, ParentProcessId: long, IntegrityLevel: string
-)
+let DeviceProcessEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,FileName: string,ProcessId: long,ProcessCommandLine: string,ParentProcessName: string,ParentProcessId: long,IntegrityLevel: string)
 [@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_process_events.csv"]
-with (format = "csv",ignoreFirstRecord = true);
-// -------- DeviceNetworkEvents --------
-let DeviceNetworkEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,RemoteIP: string,RemotePort: int,RemoteUrl: string,LocalIP: string,LocalPort: int,Protocol: string,InitiatingProcessFileName: string,InitiatingProcessId: long
-)
-[@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_network_events.csv"]
-with (format = "csv",ignoreFirstRecord = true);
+with (format = "csv", ignoreFirstRecord = true);

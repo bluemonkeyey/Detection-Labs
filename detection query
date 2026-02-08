@@ -1,20 +1,34 @@
-//KQL detection hunting for Loader//
-// Identificar archivos DLL recién creados en rutas sospechosas let RecentDLLCreations = DeviceFileEvents 
-| where ActionType == "FileCreated" // Eventos de creación de archivos 
-| where FileName endswith ".dll" // Solo DLLs 
-| where FolderPath has_any( "\ProgramData\", "\Public\", "\Documents\", "\Pictures\", "\Videos\", "\Music\", "\AppData\", "\Temp\", "\Downloads\" ) // Rutas sospechosas 
-| where Timestamp > ago(10m) // Limitado a los últimos 10 minutos 
-| project Timestamp, DeviceName, FolderPath, FileName, FileSize, InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCommandLine; // Correlacionar DLLs creadas con su uso en memoria let DLLLoadEvents = DeviceImageLoadEvents 
-| where FileName endswith ".dll" // Solo eventos relacionados con DLLs 
-| where FolderPath has_any( "\ProgramData\", "\Public\", "\Documents\", "\Pictures\", "\Videos\", "\Music\", "\AppData\", "\Temp\", "\Downloads\" ) // Rutas sospechosas 
-| where Timestamp > ago(10m) // Limitado a los últimos 10 minutos 
-| project Timestamp, DeviceName, FolderPath, FileName, InitiatingProcessFileName, InitiatingProcessId; // Correlación de DLL creadas recientemente con eventos de carga RecentDLLCreations 
-| join kind=inner (DLLLoadEvents) on $left.DeviceName == $right.DeviceName and $left.FileName == $right.FileName 
-| project Timestamp, DeviceName, FolderPath, FileName, FileSize, InitiatingProcessFileName, InitiatingProcessId, InitiatingProcessCommandLine; // Agregar heurística basada en modularidad del proceso iniciador 
-| join kind=inner ( DeviceProcessEvents 
-| where ActionType == "ProcessCreated" // Procesos creados 
-| where Timestamp > ago(10m) // Limitado a los últimos 10 minutos 
-| where FileName has_any ("notepad++.exe", "cmd.exe", "powershell.exe", "rundll32.exe") // Procesos iniciadores sospechosos 
-| project DeviceName, ProcessId, ParentProcessName, ParentProcessId, CommandLine, IntegrityLevel ) on $left.DeviceName == $right.DeviceName and $left.InitiatingProcessId == $right.ProcessId 
-| project Timestamp, DeviceName, FolderPath, FileName, FileSize, InitiatingProcessFileName, CommandLine, IntegrityLevel, ParentProcessName, ParentProcessId; // Resumen de detección summarize TotalEvents = count(), UniqueDLLs = dcount(FileName), SuspiciousProcesses = dcount(InitiatingProcessFileName) by DeviceName, FolderPath 
-| sort by TotalEvents desc;
+let TimeWindow = 10m;
+let SuspiciousDirs = dynamic([ @"\AppData\", @"\Temp\", @"\ProgramData\", @"\Public\" ]);
+let SuspiciousDroppers = dynamic([ "mshta.exe", "wscript.exe", "cscript.exe", "powershell.exe", "pwsh.exe", "rundll32.exe" ]);
+// --- Step 1: DLL dropped to user-writable path (by suspicious droppers)
+let DroppedDLLs =
+DeviceFileEvents_LAB
+| where Timestamp > ago(TimeWindow)
+| where ActionType == "FileCreated"
+| where FileName endswith ".dll"
+| where FolderPath has_any (SuspiciousDirs)
+| where tolower(InitiatingProcessFileName) has_any (SuspiciousDroppers)
+| project DeviceName, FileName, FolderPath, DllCreateTime = Timestamp, DropperProcess = InitiatingProcessFileName, DropperPid = InitiatingProcessId, DropperCmd = InitiatingProcessCommandLine;
+// --- Step 2: DLL loaded into memory
+let LoadedDLLs =
+DeviceImageLoadEvents_LAB
+| where Timestamp > ago(TimeWindow)
+| where FileName endswith ".dll"
+| where FolderPath has_any (SuspiciousDirs)
+| project DeviceName, FileName, FolderPath, DllLoadTime = Timestamp, LoaderProcess = InitiatingProcessFileName, LoaderPid = InitiatingProcessId;
+// --- Step 3: correlate drop → load (NO PID equality)
+let DllChain =
+DroppedDLLs
+| join kind=inner (LoadedDLLs) on DeviceName, FileName
+| where DllLoadTime between (DllCreateTime .. DllCreateTime + 5m);
+// --- Step 4: enrich with process context of the LOADER
+DllChain
+| join kind=leftouter (
+    DeviceProcessEvents_LAB
+    | where ActionType == "ProcessCreated"
+    | project
+ DeviceName, ProcessId, LoaderCmd = ProcessCommandLine, ParentProcessName, ParentProcessId, IntegrityLevel
+) on DeviceName, $left.LoaderPid == $right.ProcessId
+| project  DeviceName,  FolderPath,  FileName,  DllCreateTime,  DllLoadTime,  TimeDelta = DllLoadTime - DllCreateTime,  DropperProcess,  DropperPid,  DropperCmd,  LoaderProcess,  LoaderPid,  LoaderCmd,  ParentProcessName,  ParentProcessId,  IntegrityLevel
+| sort by TimeDelta asc

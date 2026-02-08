@@ -1,12 +1,15 @@
 // -------- DeviceFileEvents --------
-let DeviceFileEvents_LAB = externaldata(Timestamp: datetime,ActionType: string,DeviceName: string,DeviceId: string,FileName: string,FolderPath: string,FileSize: long,InitiatingProcessFileName: string,InitiatingProcessId: long,InitiatingProcessCommandLine: string)
+let DeviceFileEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,FileName: string,FolderPath: string,InitiatingProcessFileName: string,InitiatingProcessId: long,SHA256: string)
 [@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_file_events.csv"]
-with (format = "csv", ignoreFirstRecord = true);
+with (format = "csv", ignoreFirstRecord = true)
+| where isnotnull(Timestamp);
 // -------- DeviceImageLoadEvents --------
-let DeviceImageLoadEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,FileName: string,FolderPath: string,InitiatingProcessFileName: string,InitiatingProcessId: long,ActionType: string)
+let DeviceImageLoadEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,FileName: string,FolderPath: string,InitiatingProcessFileName: string,InitiatingProcessId: long,SHA256: string)
 [@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_image_load_events.csv"]
-with (format = "csv", ignoreFirstRecord = true);
+with (format = "csv", ignoreFirstRecord = true)
+| where isnotnull(Timestamp);
 // -------- DeviceProcessEvents --------
-let DeviceProcessEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,FileName: string,ProcessId: long,ProcessCommandLine: string,ParentProcessName: string,ParentProcessId: long,IntegrityLevel: string)
+let DeviceProcessEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,ProcessId: long,FileName: string,ProcessCommandLine: string,InitiatingProcessFileName: string,InitiatingProcessId: long,ParentProcessName: string,ParentProcessId: long,IntegrityLevel: string)
 [@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_process_events.csv"]
-with (format = "csv", ignoreFirstRecord = true);
+with (format = "csv", ignoreFirstRecord = true)
+| where isnotnull(Timestamp);

@@ -1,66 +1,86 @@
-# IcedID-like Detection Lab (LAB)
+# Synthetic Detection Dataset for Turla Kazuar v3 Loader
 
-## Objetivo
-Simular de forma **controlada y no maliciosa** una cadena de ataque tipo **IcedID (BokBot)** para **validar detecciones por correlación** en Microsoft Defender / Sentinel (Advanced Hunting), especialmente aquellas basadas en:
-- Creación de DLL en rutas sospechosas (AppData/Temp/etc.)
-- Carga inmediata de la DLL en memoria
-- Ejecución mediante LOLBINs (rundll32/regsvr32/powershell)
+Este repositorio contiene un conjunto de tablas de telemetría **ligeras y sintéticas** que pueden usarse para **probar y validar detecciones** del loader **Kazuar v3** de **Turla**. Los datos **no provienen de un entorno real**; en su lugar, simulan la secuencia de eventos descrita en el post “**COMmand & Evade: Turla's Kazuar v3 Loader**”. Al incluir solo los campos mínimos necesarios para correlación, estas tablas siguen siendo fáciles de ingerir e inspeccionar, pero permiten pruebas end-to-end de hunting queries.
 
-## Descripción del escenario
-Este laboratorio recrea el **comportamiento observable** (telemetría) típico de campañas IcedID/droppers:
-1) Un proceso inicial (simulando macro/LNK/HTA) lanza PowerShell  
-2) PowerShell descarga una DLL “loader” desde **localhost**  
-3) La DLL se ejecuta con **rundll32.exe** (DllRegisterServer)  
-4) Se generan artefactos auxiliares (p.ej. `license.dat` y un log)  
-5) Se genera tráfico HTTP hacia **127.0.0.1** (simulación de C2 sin riesgo)  
-6) Se añade ruido benigno (procesos/archivos normales) para realismo
+---
 
-> No hay C2 real, no hay exfiltración y no hay payload malicioso.
+## Contents
 
-## Flujo del escenario
-1. `powershell.exe` realiza `Invoke-WebRequest` hacia `http://127.0.0.1:8080/`  
-2. Se crea `update.dll` en una ruta user-writable (p.ej. `%AppData%\Microsoft\Templates\`)  
-3. Se crea `license.dat` en `%AppData%`  
-4. `rundll32.exe` carga `update.dll` en memoria y ejecuta `DllRegisterServer`  
-5. La DLL dummy escribe un log local (`icedid_lab.log`)  
-6. Se generan eventos benignos de fondo (p.ej. `invoice.docx`, `notepad++.exe`, etc.)
+| File | Description |
+|---|---|
+| `device_process_events.csv` | Eventos sintéticos `ProcessCreated` que muestran la ejecución del dropper (`wscript.exe`), el instalador firmado de HP (`hpbprndi.exe`) y un proceso benigno `explorer.exe`. Cada fila incluye timestamps, identificadores de proceso, procesos padre y detalles de command-line. |
+| `device_file_events.csv` | Eventos sintéticos `FileCreated` de los ficheros soltados por el VBScript. Incluye la creación de `hpbprndi.exe`, la DLL nativa `hpbprndiLOC.dll` y tres payloads cifrados (`jayb.dadk`, `kgjlj.sil`, `pkrfsu.ldy`) bajo un directorio escribible por el usuario en `AppData`. También se añade un evento benigno de creación de documento como contexto. |
+| `device_image_load_events.csv` | Eventos sintéticos `ImageLoaded` que indican cuándo se mapean DLLs en procesos. Registra la carga de `hpbprndiLOC.dll` por `hpbprndi.exe`, además de una carga benigna de `kernel32.dll` por `explorer.exe`. |
 
-## Tablas implicadas
-- **DeviceFileEvents**: creación de DLL/artefactos y ruido benigno  
-- **DeviceImageLoadEvents**: carga de la DLL en memoria  
-- **DeviceProcessEvents**: procesos y relaciones padre-hijo (PowerShell → rundll32)  
-- **DeviceNetworkEvents**: conexiones HTTP a localhost para simular descarga/C2
+---
 
-## Archivos incluidos
-- `lab_device_file_events.csv`  
-  Eventos de archivos (FileCreated y ruido)
-- `lab_device_image_events.csv`  
-  Eventos de carga de imágenes/DLLs en memoria
-- `lab_device_process_events.csv`  
-  Eventos de procesos (ProcessCreated, parent-child, command lines)
-- `lab_device_network_events.csv`  
-  Eventos de red hacia `127.0.0.1:8080`
+## Core Columns (shared)
 
-## Uso
-1. Importa los CSV a tu entorno de pruebas (Sentinel/ADX/Log Analytics u otro)  
-2. Ejecuta tu query de correlación (DeviceFileEvents + DeviceImageLoadEvents + DeviceProcessEvents)  
-3. Verifica que aparecen coincidencias:  
-   - `FileCreated` de `*.dll` en `AppData/Temp/...`  
-   - `ImageLoaded` de esa misma DLL  
-   - `rundll32.exe`/`regsvr32.exe` como iniciador o en la cadena  
-4. Ajusta filtros/ventanas de tiempo para reducir falsos positivos
+Los tres CSV comparten estas columnas base:
 
-## Indicadores esperados (IOCs de laboratorio)
-- Archivo: `update.dll` en ruta user-writable  
-- Proceso: `rundll32.exe ... ,DllRegisterServer`  
-- Red: `http://127.0.0.1:8080/payload.dll` y `http://127.0.0.1:8080/license.dat`  
-- Artefacto: `license.dat` y `icedid_lab.log`
+- **Timestamp** — Timestamp ISO-8601 en UTC.
+- **DeviceName** — Hostname del sistema simulado.
+- **DeviceId** — Identificador único del dispositivo.
+- **ActionType** — Tipo de evento (p. ej. `ProcessCreated`, `FileCreated`, `ImageLoaded`).
+- **FileName / ProcessId / FolderPath / ProcessCommandLine** — Campos relevantes según el tipo de evento.
+- **InitiatingProcessFileName / InitiatingProcessId** — Ejecutable y PID responsable de crear un fichero o cargar un módulo.
 
-## Consideraciones y seguridad
-- **No contiene malware real** ni técnicas ofensivas activas (solo simulación de trazas)  
-- Tráfico únicamente a **localhost**  
-- Diseñado para **laboratorio/entorno aislado**, no producción  
-- Útil para tuning de detecciones basadas en comportamiento (no hashes)
+Campos adicionales como **ParentProcessName**, **IntegrityLevel** y **SHA256** se incluyen cuando aportan valor.
 
-## Licencia
-Uso interno / laboratorio (ajusta esta sección según tu repo o cliente).
+---
+
+## Schema Overview
+
+Las tablas se diseñaron para ser compatibles con hunting queries escritas contra el esquema de **Microsoft 365 Defender Advanced Hunting**. Aunque se omiten muchas columnas opcionales del esquema nativo, los campos incluidos son suficientes para correlacionar creación de ficheros e image-loads con sus procesos origen.
+
+---
+
+## `device_process_events.csv`
+
+| Column | Description |
+|---|---|
+| `Timestamp` | Cuándo se creó el proceso. |
+| `DeviceName` | Nombre del host. |
+| `DeviceId` | Identificador único del host. |
+| `ActionType` | Fijado a `ProcessCreated`. |
+| `ProcessId` | PID del proceso nuevo. |
+| `FileName` | Nombre del ejecutable. |
+| `ProcessCommandLine` | Command line completa. |
+| `InitiatingProcessFileName` | Proceso padre que lanzó el nuevo proceso. |
+| `InitiatingProcessId` | PID del proceso padre. |
+| `ParentProcessName` | Igual que `InitiatingProcessFileName` (compatibilidad). |
+| `ParentProcessId` | Igual que `InitiatingProcessId` (compatibilidad). |
+| `IntegrityLevel` | Nivel de integridad (p. ej. `Medium`). |
+
+---
+
+## `device_file_events.csv`
+
+| Column | Description |
+|---|---|
+| `Timestamp` | Cuándo ocurrió el evento de fichero. |
+| `DeviceName` | Nombre del host. |
+| `DeviceId` | Identificador único del host. |
+| `ActionType` | Fijado a `FileCreated`. |
+| `FileName` | Nombre del fichero creado. |
+| `FolderPath` | Ruta del directorio donde se escribió. |
+| `InitiatingProcessFileName` | Proceso que creó el fichero. |
+| `InitiatingProcessId` | PID del proceso creador. |
+| `SHA256` | Hash SHA-256 del fichero (valores sintéticos). |
+
+---
+
+## `device_image_load_events.csv`
+
+| Column | Description |
+|---|---|
+| `Timestamp` | Cuándo se cargó el módulo en memoria. |
+| `DeviceName` | Nombre del host. |
+| `DeviceId` | Identificador único del host. |
+| `ActionType` | Fijado a `ImageLoaded`. |
+| `FileName` | Nombre del módulo cargado (DLL). |
+| `FolderPath` | Ruta del módulo en disco. |
+| `InitiatingProcessFileName` | Proceso en el que se cargó el módulo. |
+| `InitiatingProcessId` | PID del proceso “loader”. |
+| `SHA256` | Hash SHA-256 del módulo (valores sintéticos). |
+

@@ -14,11 +14,13 @@ with (format = "csv", ignoreFirstRecord = true)
 | where isnotnull(Timestamp);
 let TimeWindow = 10m;
 let SuspiciousDirs = dynamic([ @"\AppData\", @"\Temp\", @"\ProgramData\", @"\Public\" ]);
+let SuspiciousInitiators = dynamic([ "wscript.exe", "cscript.exe", "mshta.exe", "wmiprvse.exe", "rundll32.exe" ]);
 let DroppedDLLs =
 DeviceFileEvents_LAB
 | where ActionType == "FileCreated"
 | where FileName endswith ".dll"
 | where FolderPath has_any (SuspiciousDirs)
+| where tolower(InitiatingProcessFileName) in~ (SuspiciousInitiators)
 | project DeviceName, FileName, FolderPath, DllCreateTime = Timestamp, DropperProcess = InitiatingProcessFileName, DropperPid = InitiatingProcessId;
 let LoadedDLLs =
 DeviceImageLoadEvents_LAB
@@ -35,5 +37,5 @@ DeviceProcessEvents_LAB
 | where ActionType == "ProcessCreated" 
 | project DeviceName, ProcessId, LoaderCmd = ProcessCommandLine, ParentProcessName, ParentProcessId, IntegrityLevel
 ) on DeviceName, $left.LoaderPid == $right.ProcessId
-| project  DeviceName,  FolderPath,  FileName,  DllCreateTime,  DllLoadTime,  TimeDelta = DllLoadTime - DllCreateTime,  DropperProcess,  DropperPid,  LoaderProcess,  LoaderPid,  LoaderCmd,  ParentProcessName,  ParentProcessId,  IntegrityLevel
+| project DeviceName, FolderPath, FileName, DllCreateTime, DllLoadTime, TimeDelta = DllLoadTime - DllCreateTime, DropperProcess, DropperPid, LoaderProcess, LoaderPid, LoaderCmd, ParentProcessName, ParentProcessId, IntegrityLevel
 | sort by TimeDelta asc

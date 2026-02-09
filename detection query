@@ -1,34 +1,39 @@
+// -------- DeviceFileEvents --------
+let DeviceFileEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,FileName: string,FolderPath: string,InitiatingProcessFileName: string,InitiatingProcessId: long,SHA256: string)
+[@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_file_events.csv"]
+with (format = "csv", ignoreFirstRecord = true)
+| where isnotnull(Timestamp);
+// -------- DeviceImageLoadEvents --------
+let DeviceImageLoadEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,FileName: string,FolderPath: string,InitiatingProcessFileName: string,InitiatingProcessId: long,SHA256: string)
+[@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_image_load_events.csv"]
+with (format = "csv", ignoreFirstRecord = true)
+| where isnotnull(Timestamp);
+let DeviceProcessEvents_LAB = externaldata(Timestamp: datetime,DeviceName: string,DeviceId: string,ActionType: string,ProcessId: long,FileName: string,ProcessCommandLine: string,InitiatingProcessFileName: string,InitiatingProcessId: long,ParentProcessName: string,ParentProcessId: long,IntegrityLevel: string)
+[@"https://raw.githubusercontent.com/bluemonkeyey/Detection-Labs/main/device_process_events.csv"]
+with (format = "csv", ignoreFirstRecord = true)
+| where isnotnull(Timestamp);
 let TimeWindow = 10m;
 let SuspiciousDirs = dynamic([ @"\AppData\", @"\Temp\", @"\ProgramData\", @"\Public\" ]);
-let SuspiciousDroppers = dynamic([ "mshta.exe", "wscript.exe", "cscript.exe", "powershell.exe", "pwsh.exe", "rundll32.exe" ]);
-// --- Step 1: DLL dropped to user-writable path (by suspicious droppers)
 let DroppedDLLs =
 DeviceFileEvents_LAB
-| where Timestamp > ago(TimeWindow)
 | where ActionType == "FileCreated"
 | where FileName endswith ".dll"
 | where FolderPath has_any (SuspiciousDirs)
-| where tolower(InitiatingProcessFileName) has_any (SuspiciousDroppers)
-| project DeviceName, FileName, FolderPath, DllCreateTime = Timestamp, DropperProcess = InitiatingProcessFileName, DropperPid = InitiatingProcessId, DropperCmd = InitiatingProcessCommandLine;
-// --- Step 2: DLL loaded into memory
+| project DeviceName, FileName, FolderPath, DllCreateTime = Timestamp, DropperProcess = InitiatingProcessFileName, DropperPid = InitiatingProcessId;
 let LoadedDLLs =
 DeviceImageLoadEvents_LAB
-| where Timestamp > ago(TimeWindow)
 | where FileName endswith ".dll"
 | where FolderPath has_any (SuspiciousDirs)
 | project DeviceName, FileName, FolderPath, DllLoadTime = Timestamp, LoaderProcess = InitiatingProcessFileName, LoaderPid = InitiatingProcessId;
-// --- Step 3: correlate drop → load (NO PID equality)
 let DllChain =
 DroppedDLLs
 | join kind=inner (LoadedDLLs) on DeviceName, FileName
 | where DllLoadTime between (DllCreateTime .. DllCreateTime + 5m);
-// --- Step 4: enrich with process context of the LOADER
 DllChain
 | join kind=leftouter (
-    DeviceProcessEvents_LAB
-    | where ActionType == "ProcessCreated"
-    | project
- DeviceName, ProcessId, LoaderCmd = ProcessCommandLine, ParentProcessName, ParentProcessId, IntegrityLevel
+DeviceProcessEvents_LAB 
+| where ActionType == "ProcessCreated" 
+| project DeviceName, ProcessId, LoaderCmd = ProcessCommandLine, ParentProcessName, ParentProcessId, IntegrityLevel
 ) on DeviceName, $left.LoaderPid == $right.ProcessId
-| project  DeviceName,  FolderPath,  FileName,  DllCreateTime,  DllLoadTime,  TimeDelta = DllLoadTime - DllCreateTime,  DropperProcess,  DropperPid,  DropperCmd,  LoaderProcess,  LoaderPid,  LoaderCmd,  ParentProcessName,  ParentProcessId,  IntegrityLevel
+| project  DeviceName,  FolderPath,  FileName,  DllCreateTime,  DllLoadTime,  TimeDelta = DllLoadTime - DllCreateTime,  DropperProcess,  DropperPid,  LoaderProcess,  LoaderPid,  LoaderCmd,  ParentProcessName,  ParentProcessId,  IntegrityLevel
 | sort by TimeDelta asc

@@ -13,7 +13,7 @@ let DeviceProcessEvents_LAB = externaldata(Timestamp: datetime,DeviceName: strin
 with (format = "csv", ignoreFirstRecord = true)
 | where isnotnull(Timestamp);
 let SuspiciousDirs = dynamic([ @"\AppData\", @"\Temp\", @"\ProgramData\", @"\Public\" ]);
-let SuspiciousInitiators = dynamic([ "wscript.exe", "cscript.exe", "mshta.exe", "wmiprvse.exe", "rundll32.exe" ]);
+let SuspiciousInitiators = dynamic([ "wscript.exe", "cscript.exe", "mshta.exe", "powershell.exe","cmd.exe","certutil.exe","installutil.exe"]);
 let DroppedDLLs =
 DeviceFileEvents_LAB
 | where ActionType == "FileCreated"
